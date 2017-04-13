@@ -1,0 +1,10 @@
+{% extends "blogBase.html" %}
+
+{% block content %}
+
+ {% for text in texts %}
+  {{text.render() | safe }}
+  <br><br>
+ {% endfor %}
+
+{% endblock %}
