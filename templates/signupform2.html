@@ -1,11 +1,7 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
-  <head>
-    <title>Unit 2 Signup</title>
-  </head>
+{% block content %}
 
-  <body>
-    <h2>Welcome, {{username | safe}}!</h2>
-  </body>
-</html>
+<h2>Welcome, {{username | safe}}!</h2>
+
+{% endblock %}

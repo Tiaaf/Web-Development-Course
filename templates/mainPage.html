@@ -1,68 +1,56 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
-  <head>
-    <title>Udacity : Web Development Course</title>
-  </head>
+{% block content %}
 
-  <body style="margin : 0">
-    <h1 style="background-color : #ddd; color: #933; margin: 10px height: 50px">
-      Udacity : Web Development Course  <br> <font size="3"> Adam FACI </font>
-    </h1>
-     
-    <form method="post">
-      <label>
-        Main page
-        <input type="radio" name="q" value="">
-      </label>
-      <br>
-      <label>
-        Birthdate
-        <input type="radio" name="q" value="birthdate">
-      </label>
-      <br>
-      <label>
-        Rot13
-        <input type="radio" name="q" value="rot13">
-      </label>
-      <br>
-      <label>
-        Shopping list
-        <input type="radio" name="q" value="shopping">
-      </label>
-      <br>
-      <label>
-        FizzBuzz
-        <input type="radio" name="q" value="fizzbuzz">
-      </label>
-      <br>
-      <label>
-        ASCII blog
-        <input type="radio" name="q" value="ascii">
-      </label>
-      <br>
-      <label>
-        My blog
-        <input type="radio" name="q" value="blog">
-      </label>
-      <br>
-      <label>
-        Visits
-        <input type="radio" name="q" value="visits">
-      </label>
-      <br>
-      <label>
-        SignUp
-        <input type="radio" name="q" value="signup">
-      </label>
-      <br>
-      <br>
-      <button type="submit" name="submit">GO</button>
-    </form>
+<form method="post">
+  <label>
+    Main page
+    <input type="radio" name="q" value="">
+  </label>
+  <br>
+  <label>
+    Birthdate
+    <input type="radio" name="q" value="birthdate">
+  </label>
+  <br>
+  <label>
+    Rot13
+    <input type="radio" name="q" value="rot13">
+  </label>
+  <br>
+  <label>
+    Shopping list
+    <input type="radio" name="q" value="shopping">
+  </label>
+  <br>
+  <label>
+    FizzBuzz
+    <input type="radio" name="q" value="fizzbuzz">
+  </label>
+  <br>
+  <label>
+    ASCII blog
+    <input type="radio" name="q" value="ascii">
+  </label>
+  <br>
+  <label>
+    My blog
+    <input type="radio" name="q" value="blog">
+  </label>
+  <br>
+  <label>
+    Visits
+    <input type="radio" name="q" value="visits">
+  </label>
+  <br>
+  <label>
+    SignUp
+    <input type="radio" name="q" value="signup">
+  </label>
+  <br>
+  <br>
+  <button type="submit" name="submit">GO</button>
+</form>
 
-   
-   
-  </body>
 
-</html>
-
+{% endblock %}

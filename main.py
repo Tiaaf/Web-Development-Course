@@ -174,8 +174,25 @@ class Rot13(Handler):
                 
         self.render_form(text)
 
+#shopping list
+class Shopping(Handler):
+    def render_form(self,items=""):
+        self.render("shopping_list.html", items = items)
 
+    def get(self):
+        items = self.request.get_all("food")
+        self.render_form(items)
 
+#fizzbuzz
+class Fizzbuzz(Handler):
+    def render_form(self,n):
+        self.render("fizzbuzz.html",n=int(n))
+
+    def get(self):
+        n = self.request.get("n")
+        if not n:
+            n = 0
+        self.render_form(n)
         
 #ascii
 class Art(db.Model):
@@ -187,7 +204,7 @@ class Art(db.Model):
 class ASCII(Handler):
     def render_form(self, title="", art="", error=""):
         arts = db.GqlQuery("SELECT * FROM Art ORDER BY created DESC")
-        self.render("front.html", title=title, art=art, error=error, arts = arts)
+        self.render("ascii.html", title=title, art=art, error=error, arts = arts)
         
     def get(self):
         self.render_form()
@@ -389,6 +406,8 @@ app = webapp2.WSGIApplication([('/',MainPage),
                                ('/birthdate/thanks',Thanks),
                                ('/rot13',Rot13),
                                ('/ascii',ASCII),
+                               ('/shopping',Shopping),
+                               ('/fizzbuzz',Fizzbuzz),
                                ('/signup',SignUp),
                                ('/signup/welcome',Welcome),
                                ('/blog',Blog),
