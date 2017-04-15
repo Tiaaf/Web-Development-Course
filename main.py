@@ -310,7 +310,7 @@ class Visits(Handler):
         new_cookie_val = make_secure_val(str(visits))
 
 
-        self.response.headers.add_header('Set-Cookie','visits=%s' % new_cookie_val)
+        self.response.set_cookie('visits',new_cookie_val,max_age=600)
 
         if visits >= 100000:
             self.write("Luv luv <3\n\n %s times on our website it's wonderful !" % visits)
@@ -344,24 +344,37 @@ def valid_pw(name, pw, h):
     salt = h.split('|')[1]
     return h == make_pw_hash(name,pw,salt)
 
-# class Users(db.Model):
-#     user_id = db.StringProperty(required = True)
-#     password = db.StringProperty(required = True)
-#     email = db.StringProperty(required = False)
-#     created = db.DateTimeProperty(auto_now_add = True)
+class User(db.Model):
+    username = db.StringProperty(required = True)
+    password = db.StringProperty(required = True)
+    email = db.StringProperty()
+    created = db.DateTimeProperty(auto_now_add = True)
 
-#     def already_exists(user_id_entered):
-#         if user_id_entered:
-#             db.GqlQuery("SELECT * FROM Users WHERE user_id=user_id_entered")
-    
+    @classmethod
+    def register(Class,username,password,email=None):
+        password_hash = make_pw_hash(username,password)
+        u = Class(username = username,
+                 password = password_hash,
+                 email = email)
+        u.put()
+
+    @classmethod
+    def exists(Class,username):
+        return Class.all().filter('username =',username).count() != 0
+
 class SignUp(Handler):
     def render_form(self,errorUsername="",errorPassword="",errorVerify="",errorEmail=""):
-        self.render("signupform1.html", errorUsername = errorUsername,
+        self.render("signup.html", errorUsername = errorUsername,
                                         errorPassword = errorPassword,
                                         errorVerify = errorVerify,
                                         errorEmail = errorEmail)
     
     def get(self):
+        username_cookie_hash = self.request.cookies.get('username')
+        if username_cookie_hash:
+            username = check_secure_val(username_cookie_hash)
+            if username:
+                self.redirect("/signup/welcome")
         self.render_form()
 
     def post(self):
@@ -374,31 +387,97 @@ class SignUp(Handler):
         errorPassword = ""
         errorVerify = ""
         errorEmail = ""
+
+        valid_username_bool = valid_username(username)
+        valid_password_bool = valid_password(password)
+        password_equal_verify_bool = (password == verify)
+        valid_email_bool = valid_email(email)
+        exists_bool = User.exists(username)
         
-        if valid_username(username) and valid_password(password) and password == verify and (valid_email(email) or email == ""):
-            self.request.cookies
-            self.redirect("/signup/welcome?username="+username)
-        if not valid_username(username):
+        if valid_username_bool and valid_password_bool and password_equal_verify_bool and (valid_email_bool or email == "") and not exists_bool:
+            new_username_cookie_val = make_secure_val(username)
+            self.response.set_cookie('username',str(new_username_cookie_val),max_age=600)
+            User.register(username,password,email)
+            self.redirect("/signup/welcome")
+        if not valid_username_bool:
             errorUsername="That's not a valid username."
-        if not valid_password(password):
+        elif exists_bool:
+            errorUsername="That username already exists."
+        if not valid_password_bool:
             errorPassword="That wasn't a valid password."
-        elif password != verify:
+        elif not password_equal_verify_bool:
             errorVerify="Your passwords didn't match."
-        if not (valid_email(email) or email==""):
+        if not valid_email_bool and email != "":
             errorEmail="That's not a valid email."
+            
             
         self.render_form(errorUsername,errorPassword,errorVerify,errorEmail)
 
-
-class Welcome(Handler):
-    def render_form(self,username=""):
-        self.render("signupform2.html",username = username)
+class Login(Handler):
+    def render_form(self,username="",errorUsername="",errorPassword=""):
+        self.render("login.html",username = username,
+                                 errorUsername = errorUsername,
+                                 errorPassword = errorPassword)
 
     def get(self):
+        username_cookie_hash = self.request.cookies.get('username')
+        if username_cookie_hash:
+            username = check_secure_val(username_cookie_hash)
+            if username:
+                self.redirect("/signup/welcome")
+        self.render_form()
+
+    def post(self):
         username = self.request.get('username')
-        self.render_form(username)
+        password = self.request.get('password')
 
+        errorUsername = ""
+        errorPassword = ""
 
+        username_exists_bool = User.exists(username)
+        
+        if username_exists_bool:
+            password_db_hash = User.all().filter('username =',username).get().password
+            password_OK_bool = valid_pw(username,password,password_db_hash)
+            if password_OK_bool:
+                new_username_cookie_val = make_secure_val(username)
+                self.response.set_cookie('username',str(new_username_cookie_val), max_age = 600)
+                self.redirect("signup/welcome")
+                return
+            else:
+                errorPassword = "Wrong password"
+        else:
+            errorUsername = "Invalid login"
+
+        self.render_form(username,errorUsername,errorPassword)
+                
+        
+
+class Welcome(Handler):
+    def render_form(self,username):
+        if not username:
+            self.write("Oops ! You went there by mistake :3 ? Please go back and try again.")
+            return
+        self.render("welcome.html",username = username)
+
+    def get(self):
+        username_cookie_val = self.request.cookies.get('username')
+        if username_cookie_val:
+            username_cookie_val = check_secure_val(username_cookie_val)
+            if username_cookie_val:
+                self.render_form(username_cookie_val)
+                return
+        
+        self.redirect("/signup")
+
+    def post(self):
+        self.response.delete_cookie('username')
+        self.redirect("/signup")
+
+class Logout(Handler):
+    def get(self):
+        self.response.delete_cookie('username')
+        self.redirect("/signup")
 
             
 app = webapp2.WSGIApplication([('/',MainPage),
@@ -409,6 +488,8 @@ app = webapp2.WSGIApplication([('/',MainPage),
                                ('/shopping',Shopping),
                                ('/fizzbuzz',Fizzbuzz),
                                ('/signup',SignUp),
+                               ('/login',Login),
+                               ('/logout',Logout),
                                ('/signup/welcome',Welcome),
                                ('/blog',Blog),
                                ('/blog/newpost',NewPost),

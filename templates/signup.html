@@ -13,7 +13,7 @@
         <input type="text" name="username" value="">
       </td>
       <td class="error">
-        {{errorUsername}}
+        {{errorUsername | safe}}
       </td>
     </tr>
 
@@ -25,7 +25,7 @@
         <input type="password" name="password">
       </td>
       <td class="error">
-        {{errorPassword}}
+        {{errorPassword | safe}}
       </td>
     </tr>
 
@@ -37,7 +37,7 @@
         <input type="password" name="verify">
       </td>
       <td class="error">
-        {{errorVerify}}
+        {{errorVerify | safe}}
       </td>
     </tr>
 
@@ -49,7 +49,7 @@
         <input type="text" name="email">
       </td>
       <td class="error">
-        {{errorEmail}}
+        {{errorEmail | safe}}
       </td>
     </tr>
   </table>
