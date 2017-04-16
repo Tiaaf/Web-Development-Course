@@ -6,7 +6,8 @@ import os
 import jinja2
 import webapp2
 import re
-
+import urllib2
+from xml.dom import minidom
 from google.appengine.ext import db
 template_dir = os.path.join(os.path.dirname(__file__),'templates')
 #autoescape = True allows automatic escaping of html content
@@ -195,16 +196,46 @@ class Fizzbuzz(Handler):
         self.render_form(n)
         
 #ascii
+IP_URL = "http://ip-api.com/xml/#"
+def get_coords(ip):
+    url = IP_URL + ip
+    content = None
+
+    try:
+        content = urllib2.urlopen(url).read()
+    except URLError:
+        return
+    
+    if content:
+        d = minidom.parseString(content)
+        lat = d.getElementsByTagName("lat")[0].childNodes[0].nodeValue
+        lon = d.getElementsByTagName("lon")[0].childNodes[0].nodeValue
+        return db.GeoPt(lat,lon)
+
+GMAPS_URL = "http://maps.googleapis.com/maps/api/staticmap?size=380x263&sensor=false&"
+def gmaps_img(points):
+    markers = '&'.join("markers=%s,%s" % (p.lat,p.lon) for p in points)
+    return GMAPS_URL + markers
+    
 class Art(db.Model):
     title = db.StringProperty(required = True)
     art = db.TextProperty(required = True)
+    coords = db.GeoPtProperty()
     created = db.DateTimeProperty(auto_now_add = True)
 
     
 class ASCII(Handler):
     def render_form(self, title="", art="", error=""):
-        arts = db.GqlQuery("SELECT * FROM Art ORDER BY created DESC")
-        self.render("ascii.html", title=title, art=art, error=error, arts = arts)
+        arts = db.GqlQuery("SELECT * FROM Art ORDER BY created DESC LIMIT 10")
+
+        arts = list(arts)
+        
+        points = filter(None,(a.coords for a in arts))
+        
+        img_url = None
+        if points:
+            img_url = gmaps_img(points)
+        self.render("ascii.html", title=title, art=art, error=error, arts = arts, img_url = img_url)
         
     def get(self):
         self.render_form()
@@ -215,8 +246,11 @@ class ASCII(Handler):
 
         if title and art:
             a = Art(title = title, art = art)
+            coords = get_coords(self.request.remote_addr)
+            if coords:
+                a.coords = coords
             a.put()
-
+            
             self.redirect("/ascii")
             
         else:
@@ -479,6 +513,9 @@ class Logout(Handler):
         self.response.delete_cookie('username')
         self.redirect("/signup")
 
+
+#json
+
             
 app = webapp2.WSGIApplication([('/',MainPage),
                                ('/birthdate',Birthdate),
@@ -494,6 +531,8 @@ app = webapp2.WSGIApplication([('/',MainPage),
                                ('/blog',Blog),
                                ('/blog/newpost',NewPost),
                                ('/blog/(\d+)',IdPost),
+                               ('/blog.json',BlogJson),
+                               ('/blog/(\d+).json',NewPostJson),
                                ('/visits',Visits)
                                 ],
                                debug=True)

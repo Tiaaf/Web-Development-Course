@@ -13,6 +13,11 @@
       padding: 10px;
       }
 
+      .map{
+      position: absolute;
+      right: 0;
+      top:100px;
+      }
       .error{
       color: red;
       }
@@ -77,6 +82,10 @@
       <input type="submit">
     </form>
 
+    {% if img_url %}
+      <img class="map" src="{{img_url}}">
+    {% endif %}
+      
     <hr>
 
     {% for art in arts %}
